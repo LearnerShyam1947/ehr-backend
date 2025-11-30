@@ -18,7 +18,7 @@ class Patient implements Serializable {
     
 }
 
-public class BlockchainHashUtils {
+public class CloudHashUtils {
 
     public static String hashObject(Object obj, String algorithm) throws NoSuchAlgorithmException, IOException {
         

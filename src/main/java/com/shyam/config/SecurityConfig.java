@@ -109,7 +109,7 @@ public class SecurityConfig {
             authorizer -> authorizer
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() 
                                 .requestMatchers(ALLOWED_AUTH_URLS).permitAll()
-                                .anyRequest().authenticated()
+                                .anyRequest().permitAll()
         );
 
         security.addFilterBefore(
