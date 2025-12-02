@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.shyam.dto.request.ChangePasswordRequest;
 import com.shyam.dto.request.LoginRequest;
 import com.shyam.dto.request.MFALoginRequest;
 import com.shyam.dto.request.MFARequest;
@@ -30,6 +31,7 @@ import com.shyam.services.MFAEmailOTPService;
 import com.shyam.services.UserService;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -130,5 +132,19 @@ public class AuthController {
         return userService.createAdmin();
     }
     
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Map<Object,Object>> forgotPassword(
+        @Valid @RequestBody EmailRequest request
+    ) throws RequestedEntityNotFoundException {
+        userService.forgotPassword(request.email);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(Map.of("message", "password reset mail was successfully"));
+    }
+
+    public record EmailRequest(
+        @NotBlank(message = "email is required") String email
+    ) { }
 
 }

@@ -2,10 +2,8 @@ package com.shyam.services;
 
 import java.io.StringWriter;
 import java.io.Writer;
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -13,22 +11,17 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 import com.shyam.entities.UserEntity;
-import com.shyam.repositories.UserRepository;
-import com.shyam.utils.Utils;
 
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import jakarta.mail.internet.MimeMessage;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class EmailService {
 
-    private final HttpServletRequest request;
     private final Configuration configuration;
-    private final UserRepository userRepository;
     private final JavaMailSender javaMailSender;
 
     @Value("${application.frontend.baseUrl}")
@@ -104,40 +97,38 @@ public class EmailService {
 
     @SuppressWarnings("null")
     public void sendForgotPasswordEmail(UserEntity user) {
+        System.out.println("Sending forgot password mail.........");
+        
+        HashMap<String, Object> map = new HashMap<>();
+        Writer out = new StringWriter();
+
+        String link = frontendBaseUrl;
+        link = link + "/set-password/"+user.getToken();
+
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(mimeMessage);
 
-        user.setToken(UUID.randomUUID().toString());
-        user.setExpireTime(Utils.getAddedDate(1, Calendar.HOUR));
-        userRepository.save(user);
-
         try {
-            Writer out = new StringWriter();
-            HashMap<String, Object> map = new HashMap<>();
-            map.put("userName", user.getUsername());
-
-            String link = request.getRequestURL().toString().replace(request.getServletPath(), "");
-            link = link + "/auth/validate-token/"+user.getToken();
-            map.put("link", link);
-
-            helper.setFrom("secureehr.cloud@gmail.com", "SecureEHR Admin");
+            helper.setFrom(emailUsername, "SecureEHR Admin");
             helper.setTo(user.getEmail());
-            helper.setSubject("Forgot password email");
+            helper.setSubject("Reset your password | SecureEHR");
 
             Template template = configuration.getTemplate("forgot-password-email.ftl");
+
+            map.put("userName", user.getUsername());
+            map.put("link", link);
             template.process(map, out);
 
             helper.setText(out.toString(), true);
 
             javaMailSender.send(mimeMessage);
-
         } 
         catch (Exception e) {
             e.printStackTrace();
         }
 
     }
-
+    
     @SuppressWarnings("null")
     public void sendHtmlMail(String templateUrl, Map<String, Object>  map, String to, String subject) {
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();

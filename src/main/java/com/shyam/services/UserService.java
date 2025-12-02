@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.shyam.config.custom.MyUserDetails;
+import com.shyam.dto.request.ChangePasswordRequest;
 import com.shyam.dto.request.MFALoginRequest;
 import com.shyam.dto.request.MFARequest;
 import com.shyam.dto.request.SetPasswordRequest;
@@ -112,6 +113,38 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    public UserEntity forgotPassword(String email) throws RequestedEntityNotFoundException {
+        UserEntity byEmail = userRepository.findByEmail(email);
+
+        if(byEmail == null)
+            throw new RequestedEntityNotFoundException("No user found with email: " + email);
+
+        byEmail.setToken(UUID.randomUUID().toString());
+        byEmail.setExpireTime(Utils.getAddedDate(1, Calendar.HOUR));
+        UserEntity save = userRepository.save(byEmail);
+        System.out.println(save);
+
+        emailService.sendForgotPasswordEmail(save);
+
+        return save;
+    }
+
+    public UserEntity changePassword(ChangePasswordRequest request, long userId) throws RequestedEntityNotFoundException {
+        UserEntity userById = userRepository.findById(userId)
+                                .orElseThrow(() -> new RequestedEntityNotFoundException());
+
+        if(!passwordEncoder.matches(request.getOldPassword(), userById.getPasswordHash()))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "old password was incorrect");
+
+        if(!request.getNewPassword().equals(request.getRetypePassword()))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password doesn't match");
+
+        userById.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        UserEntity save = userRepository.save(userById);
+
+        return save;
+    }
+
     public UserEntity getUserByEmail(String email) throws RequestedEntityNotFoundException {
         UserEntity userByEmail = userRepository.findByEmail(email);
 
@@ -197,8 +230,8 @@ public class UserService {
     public UserEntity createAdmin() {
         UserEntity user = new UserEntity();
         user.setUsername("ADMIN");
-        user.setEmail("admin@gmail.com");
-        user.setPasswordHash(passwordEncoder.encode("admin12345"));
+        user.setEmail("capstoneproject621@gmail.com");
+        user.setPasswordHash(passwordEncoder.encode("Capstone@Project"));
         user.setRole(Role.ADMIN);
 
         return userRepository.save(user);
