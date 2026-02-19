@@ -12,6 +12,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.beans.factory.annotation.Value;
 
 import com.shyam.config.custom.MyUserDetails;
 import com.shyam.dto.request.ChangePasswordRequest;
@@ -48,6 +49,13 @@ public class UserService {
     private final MFAEmailOTPService mfaEmailOTPService;
     private final PatientRecordRepository patientRecordRepository;
     private final MFAAuthenticatorAppService mfaAuthenticatorAppService;
+
+    @Value("${DEFAULT_ADMIN_EMAIL}")
+    private String defaultAdminEmail;
+
+    @Value("${DEFAULT_ADMIN_PASSWORD}")
+    private String defaultAdminPassword;
+
 
     public UserEntity getCurrentUser() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -228,13 +236,20 @@ public class UserService {
     }
 
     public UserEntity createAdmin() {
+
+    UserEntity existingAdmin = userRepository.findByEmail(defaultAdminEmail);
+        if (existingAdmin != null) {
+            return existingAdmin;
+        }
+    
         UserEntity user = new UserEntity();
         user.setUsername("ADMIN");
-        user.setEmail("capstoneproject621@gmail.com");
-        user.setPasswordHash(passwordEncoder.encode("Capstone@Project"));
+        user.setEmail(defaultAdminEmail);
+        user.setPasswordHash(passwordEncoder.encode(defaultAdminPassword));
         user.setRole(Role.ADMIN);
-
+    
         return userRepository.save(user);
     }
+
 
 }
