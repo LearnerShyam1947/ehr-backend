@@ -35,7 +35,7 @@ public class LabTechnicianController {
     @GetMapping("/reports")
     public ResponseEntity<?> getMyReports() {
 
-        List<ReportEntity> myReports = labTechnicianService.getMyReports();
+        List<ReportEntity> myReports = labTechnicianService.getAllReports();
 
         Set<ReportResponse> reportResponse = myReports.stream()
             .map(this::reportEntityToResponse)
