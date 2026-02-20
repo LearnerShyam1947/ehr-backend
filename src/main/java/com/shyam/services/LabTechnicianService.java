@@ -60,5 +60,9 @@ public class LabTechnicianService {
         return reportRepository.findByDoctorId(labTechnicianId);
         
     }
+
+    public List<ReportEntity> getAllReports() {
+        return reportRepository.findAll();
+    }
     
 }
